@@ -10,3 +10,8 @@ To share the method found before, the following code provides two main functions
 - Capture exception information
 
 【Analysis is written in the note】
+
+NOTICE: ********
+you should set "NSStream+SKPSMTPExtensions.m" and "SKPSMtPMessage.m" which is MRC file.
+How to do: *****
+click "Build Phases" ,click "Compile Sources", double click  "NSStream+SKPSMTPExtensions.m" and  "SKPSMtPMessage.m" ,add "-fon-objc-arc"
