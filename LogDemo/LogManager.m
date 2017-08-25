@@ -8,22 +8,47 @@
 
 #import "LogManager.h"
 #import <UIKit/UIKit.h>
+#import "SMTPLibrary/SKPSMTPMessage.h"
+#import "SMTPLibrary/NSData+Base64Additions.h"
+
+@interface LogManager () <SKPSMTPMessageDelegate>
+
+@end
 
 @implementation LogManager
 
-+ (void)redirectNSLogToDocumentFolder
+static LogManager * _instance = nil;
+
++(instancetype) shareInstance
+{
+    static dispatch_once_t onceToken ;
+    dispatch_once(&onceToken, ^{
+        _instance = [[self alloc] init] ;
+    }) ;
+    
+    return _instance ;
+}
+
+- (instancetype)init {
+    if (self = [super init]) {
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(sendMessage:) name:@"kSendMessage" object:nil];
+    }
+    return self;
+}
+
+- (void)redirectNSLogToDocumentFolder
 {
     //如果已经连接Xcode调试则不输出到文件
     //该函数用于检测输出 (STDOUT_FILENO) 是否重定向 是个 Linux 程序方法
-    if(isatty(STDOUT_FILENO)) {
-        return;
-    }
+//    if(isatty(STDOUT_FILENO)) {
+//        return;
+//    }
     
     // 判断 当前是否在 模拟器环境 下 在模拟器不保存到文件中
-    UIDevice *device = [UIDevice currentDevice];
-    if([[device model] hasSuffix:@"Simulator"]){
-        return;
-    }
+//    UIDevice *device = [UIDevice currentDevice];
+//    if([[device model] hasSuffix:@"Simulator"]){
+//        return;
+//    }
     
     //将NSlog打印信息保存到Document目录下的Log文件夹下
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
@@ -106,9 +131,40 @@ void UncaughtExceptionHandler(NSException* exception)
     }
     
     //把错误日志发送到邮箱
-    // NSString *urlStr = [NSString stringWithFormat:@"mailto://XXXXX@126.com?subject=bug报告&body=感谢您的配合!<br><br><br>错误详情:<br>%@",crashString ];
-    // NSURL *url = [NSURL URLWithString:[urlStr stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
-    // [[UIApplication sharedApplication] openURL:url];
+//     NSString *urlStr = [NSString stringWithFormat:@"mailto://XXXXX@126.com?subject=bug报告&body=感谢您的配合!<br><br><br>错误详情:<br>%@",crashString ];
+//     NSURL *url = [NSURL URLWithString:[urlStr stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+//     [[UIApplication sharedApplication] openURL:url];
+
+//    [[NSNotificationCenter defaultCenter] postNotificationName:@"kSendMessage" object:nil userInfo:@[@"message" :crashString]];
+    NSDictionary *dic = [NSDictionary dictionaryWithObjectsAndKeys:crashString, @"message", nil];
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"kSendMessage" object:nil userInfo:dic];
+}
+
+
+- (void)sendMessage:(NSNotification *)noti {
+    NSString *message = noti.userInfo[@"message"];
+    SKPSMTPMessage *mail = [[SKPSMTPMessage alloc] init];
+    [mail setSubject:@"我是主题"];  // 设置邮件主题
+    [mail setToEmail:@"313204141@qq.com"]; // 目标邮箱
+    [mail setFromEmail:@"lmsun@mo9.com"]; // 发送者邮箱
+    [mail setRelayHost:@"smtp.qq.com"]; // 发送邮件代理服务器
+    [mail setRequiresAuth:YES];
+    [mail setLogin:@"lmsun@mo9.com"]; // 发送者邮箱账号
+    [mail setPass:@"S3603840lm"]; // 发送者邮箱密码
+    [mail setWantsSecure:YES];  // 需要加密
+    [mail setDelegate:self];
+    
+    NSDictionary *plainPart = @{kSKPSMTPPartContentTypeKey : @"text/plain", kSKPSMTPPartMessageKey : message, kSKPSMTPPartContentTransferEncodingKey : @"8bit"};
+    
+    [mail setParts:@[plainPart]]; // 邮件首部字段、邮件内容格式和传输编码
+    [mail send];
+}
+
+-(void)messageSent:(SKPSMTPMessage *)message {
+    NSLog(@"message:%@", message);
+}
+-(void)messageFailed:(SKPSMTPMessage *)message error:(NSError *)error {
+    NSLog(@"error:%@",error);
 }
 
 @end

@@ -10,6 +10,8 @@
 
 @interface LogManager : NSObject
 
-+ (void)redirectNSLogToDocumentFolder;
++ (instancetype)shareInstance;
+
+- (void)redirectNSLogToDocumentFolder;
 
 @end
