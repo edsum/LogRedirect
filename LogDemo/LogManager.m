@@ -145,12 +145,12 @@ void UncaughtExceptionHandler(NSException* exception)
     NSString *message = noti.userInfo[@"message"];
     SKPSMTPMessage *mail = [[SKPSMTPMessage alloc] init];
     [mail setSubject:@"我是主题"];  // 设置邮件主题
-    [mail setToEmail:@"313204141@qq.com"]; // 目标邮箱
+    [mail setToEmail:@"xxxxxxx@qq.com"]; // 目标邮箱
     [mail setFromEmail:@"lmsun@mo9.com"]; // 发送者邮箱
     [mail setRelayHost:@"smtp.qq.com"]; // 发送邮件代理服务器
     [mail setRequiresAuth:YES];
-    [mail setLogin:@"lmsun@mo9.com"]; // 发送者邮箱账号
-    [mail setPass:@"S3603840lm"]; // 发送者邮箱密码
+    [mail setLogin:@"xxxxxxx@1.com"]; // 发送者邮箱账号
+    [mail setPass:@"Sxxxxxxxx"]; // 发送者邮箱密码
     [mail setWantsSecure:YES];  // 需要加密
     [mail setDelegate:self];
     
